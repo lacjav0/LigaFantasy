@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+*.log
+players_list.json
+search_results_*.json
+test_*.js
+reproduce_error.js
+reproduce_introspect.js
+debug_*.js
+introspect.js
+root_introspection.js
+find_search_fields.js
+.gemini/
+.agents/
+.agent/
+.env

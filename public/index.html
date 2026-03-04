@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorare Fantasy Optimizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Sorare <span>Optimizer</span></h1>
+            <p>Maximiza tu puntuación en la Liga Fantasy con datos reales de Sorare.</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="card">
+                    <h3><i class="ph ph-magnifying-glass"></i> Buscar Jugadores</h3>
+                    <div class="search-container">
+                        <input type="text" id="player-search" placeholder="Escribe el nombre de un jugador...">
+                        <div id="search-results" class="search-results hidden"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="ph ph-strategy"></i> Táctica</h3>
+                    <p class="hint">Elige la formación para tu Mejor XI</p>
+                    <select id="formation-select" class="form-select">
+                        <option value="4-4-2">4-4-2 (Equilibrada)</option>
+                        <option value="4-3-3">4-3-3 (Ofensiva)</option>
+                        <option value="4-5-1">4-5-1 (Control)</option>
+                        <option value="5-3-2">5-3-2 (Defensiva)</option>
+                        <option value="5-4-1">5-4-1 (Muro)</option>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <h3><i class="ph ph-users-three"></i> Tus Jugadores</h3>
+                    <p class="hint">Escribe los slugs o añade desde el buscador arriba</p>
+                    <textarea id="slugs-input"
+                        placeholder="jude-bellingham&#10;robert-lewandowski&#10;vinicius-junior"></textarea>
+                    <div class="btn-group">
+                        <button id="optimize-btn" class="primary-btn"><i class="ph ph-magic-wand"></i> Optimizar
+                            Equipo</button>
+                        <button id="save-btn" class="secondary-btn"><i class="ph ph-floppy-disk"></i> Guardar
+                            Lista</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="results-section" class="results-section hidden">
+                <div class="results-header">
+                    <h2><i class="ph ph-chart-bar"></i> Resultados de Optimización</h2>
+                </div>
+
+                <div id="best-xi-container" class="best-xi-section">
+                    <h3><i class="ph ph-soccer-ball"></i> Tu Mejor XI Recomendado</h3>
+                    <div id="best-xi-grid" class="rankings-grid highlight-grid"></div>
+                </div>
+
+                <div id="all-rankings-container">
+                    <h3><i class="ph ph-list-numbers"></i> Todos los Jugadores (por Potencial)</h3>
+                    <div id="rankings-grid" class="rankings-grid"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="loader" class="loader-overlay hidden">
+        <div class="loader"></div>
+        <p>Analizando estadísticas de Sorare...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
