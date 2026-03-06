@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerSearch = document.getElementById('player-search');
     const searchResults = document.getElementById('search-results');
     const saveBtn = document.getElementById('save-btn');
+    const globalBargainsBtn = document.getElementById('global-bargains-btn');
 
     // Auto-load saved list on startup
     async function loadSavedList() {
@@ -129,6 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    let currentRankings = [];
+    let currentFailedSlugs = [];
+
     optimizeBtn.addEventListener('click', async () => {
         const text = slugsInput.value.trim();
         const formation = document.getElementById('formation-select').value;
@@ -154,12 +158,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
+            currentRankings = data.ranked;
+            currentFailedSlugs = data.failedSlugs;
+
+            // Ensure Best XI container is visible for regular optimization
+            document.getElementById('best-xi-container').classList.remove('hidden');
+
             renderBestXI(data.bestXI);
-            renderRankings(data.ranked, data.failedSlugs);
+            applySortingAndRender();
             resultsSection.classList.remove('hidden');
         } catch (error) {
             console.error(error);
             alert(`Hubo un error al obtener los datos: ${error.message}`);
+        } finally {
+            showLoader(false);
+        }
+    });
+
+    const sortSelect = document.getElementById('sort-select');
+    sortSelect.addEventListener('change', () => {
+        applySortingAndRender();
+    });
+
+    function applySortingAndRender() {
+        const sortBy = sortSelect.value;
+        const sorted = [...currentRankings].sort((a, b) => {
+            if (sortBy === 'value') return b.valueScore - a.valueScore;
+            return b.score - a.score;
+        });
+        renderRankings(sorted, currentFailedSlugs);
+    }
+
+    globalBargainsBtn.addEventListener('click', async () => {
+        showLoader(true);
+        try {
+            const response = await fetch('/api/bargains/global');
+            if (!response.ok) throw new Error('Error al obtener chollos globales');
+
+            const data = await response.json();
+            currentRankings = data;
+            currentFailedSlugs = [];
+
+            // Hide the Best XI since this is a global list, not a team selection
+            document.getElementById('best-xi-container').classList.add('hidden');
+
+            // Adjust results title
+            document.querySelector('#all-rankings-container h3').innerHTML = '<i class="ph ph-fire"></i> Top 10 Chollos de La Liga';
+
+            renderRankings(data, []);
+            resultsSection.classList.remove('hidden');
+
+            // Auto-sort to value
+            document.getElementById('sort-select').value = 'value';
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        } catch (error) {
+            console.error(error);
+            alert(`Error: ${error.message}`);
         } finally {
             showLoader(false);
         }
@@ -208,12 +264,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function createPlayerCard(p, index) {
         const card = document.createElement('div');
         card.className = 'player-card';
+        if (p.status && p.status !== 'Fit') {
+            card.classList.add(`status-${p.status.toLowerCase()}`);
+        }
         card.style.animationDelay = `${index * 0.1}s`;
+
+        const statusLabel = p.status && p.status !== 'Fit' ? `<span class="player-status-badge">${p.status}</span>` : '';
 
         card.innerHTML = `
             <div class="rank-badge">#${index + 1}</div>
             <div class="player-main">
-                <span class="player-pos">${translatePosition(p.position)}</span>
+                <div class="player-info-row">
+                    <span class="player-pos">${translatePosition(p.position)}</span>
+                    ${statusLabel}
+                </div>
                 <span class="player-name">${p.name}</span>
             </div>
             <div class="player-stats">
@@ -228,6 +292,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="stat-box">
                     <span class="stat-label">POTENCIAL</span>
                     <span class="stat-value potential">${p.score}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">VALOR</span>
+                    <span class="stat-value value">${p.valueScore}</span>
                 </div>
             </div>
         `;
