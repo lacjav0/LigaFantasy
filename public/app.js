@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     const optimizeBtn = document.getElementById('optimize-btn');
-    const slugsInput = document.getElementById('slugs-input');
     const resultsSection = document.getElementById('results-section');
     const rankingsGrid = document.getElementById('rankings-grid');
     const loader = document.getElementById('loader');
@@ -10,16 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('save-btn');
     const globalBargainsBtn = document.getElementById('global-bargains-btn');
 
+    let selectedPlayers = [];
+
     // Auto-load saved list on startup
     async function loadSavedList() {
         try {
             const response = await fetch('/api/load');
             const data = await response.json();
             if (data.slugs && data.slugs.length > 0) {
-                slugsInput.value = data.slugs.join('\n');
-            } else {
-                // Default fallback if no saved list
-                slugsInput.value = "jude-bellingham\nrobert-lewandowski\nantoine-griezmann\nvinicius-jose-paixao-de-oliveira-junior";
+                selectedPlayers = data.slugs;
+                renderSelectedList();
             }
         } catch (error) {
             console.error('Failed to load saved list:', error);
@@ -28,9 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSavedList();
 
     saveBtn.addEventListener('click', async () => {
-        const text = slugsInput.value.trim();
-        const slugs = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="ph ph-circle-notch"></i> Guardando...';
 
@@ -38,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slugs })
+                body: JSON.stringify({ slugs: selectedPlayers })
             });
 
             if (response.ok) {
@@ -59,8 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
         }
     });
-
-    // Sample data for quick testing if user wants it (Moved to loadSavedList)
 
     // Search logic with debounce
     let searchTimeout;
@@ -97,11 +91,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('div');
                 item.className = 'search-item';
                 item.innerHTML = `
-                    <span>${p.displayName}</span>
+                    <div class="search-item-info">
+                        <span class="name">${p.displayName}</span>
+                        <span class="club">${p.club}</span>
+                    </div>
                     <span class="add-btn">Añadir</span>
                 `;
                 item.onclick = () => {
-                    addSlug(p.slug);
+                    addPlayer(p);
                     playerSearch.value = '';
                     searchResults.classList.add('hidden');
                 };
@@ -111,16 +108,63 @@ document.addEventListener('DOMContentLoaded', () => {
         searchResults.classList.remove('hidden');
     }
 
-    function addSlug(slug) {
-        const current = slugsInput.value.trim();
-        const slugs = current ? current.split('\n') : [];
-        if (!slugs.includes(slug)) {
-            slugs.push(slug);
-            slugsInput.value = slugs.join('\n');
-            // Flash effect
-            slugsInput.style.borderColor = 'var(--accent)';
-            setTimeout(() => slugsInput.style.borderColor = '', 500);
+    function addPlayer(player) {
+        if (!selectedPlayers.some(p => p.slug === player.slug)) {
+            selectedPlayers.push({
+                slug: player.slug,
+                displayName: player.displayName,
+                club: player.club,
+                customPosition: null
+            });
+            renderSelectedList();
         }
+    }
+
+    function renderSelectedList() {
+        // We will replace the textarea with a visual list in HTML later
+        // For now, let's update a hidden area or sync with current logic
+        // Actually, let's refactor the whole UI for "Tus Jugadores"
+        const listContainer = document.getElementById('selected-players-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '';
+        selectedPlayers.forEach((p, index) => {
+            const item = document.createElement('div');
+            item.className = 'selected-player-item';
+            item.innerHTML = `
+                <div class="player-meta">
+                    <span class="name">${p.displayName}</span>
+                    <span class="club">${p.club || ''}</span>
+                </div>
+                <div class="player-actions">
+                    <select class="pos-override" data-index="${index}">
+                        <option value="">Posición Original</option>
+                        <option value="Goalkeeper" ${p.customPosition === 'Goalkeeper' ? 'selected' : ''}>POR</option>
+                        <option value="Defender" ${p.customPosition === 'Defender' ? 'selected' : ''}>DEF</option>
+                        <option value="Midfielder" ${p.customPosition === 'Midfielder' ? 'selected' : ''}>MED</option>
+                        <option value="Forward" ${p.customPosition === 'Forward' ? 'selected' : ''}>DEL</option>
+                    </select>
+                    <button class="remove-btn" data-index="${index}"><i class="ph ph-trash"></i></button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+
+        // Event listeners for actions
+        document.querySelectorAll('.pos-override').forEach(select => {
+            select.onchange = (e) => {
+                const idx = e.target.dataset.index;
+                selectedPlayers[idx].customPosition = e.target.value || null;
+            };
+        });
+
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                const idx = btn.dataset.index;
+                selectedPlayers.splice(idx, 1);
+                renderSelectedList();
+            };
+        });
     }
 
     // Close search results when clicking outside
@@ -134,22 +178,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFailedSlugs = [];
 
     optimizeBtn.addEventListener('click', async () => {
-        const text = slugsInput.value.trim();
-        const formation = document.getElementById('formation-select').value;
-        if (!text) {
-            alert('Por favor, introduce al menos un slug de jugador.');
+        if (selectedPlayers.length === 0) {
+            alert('Por favor, añade al menos un jugador.');
             return;
         }
 
-        const slugs = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-
+        const formation = document.getElementById('formation-select').value;
         showLoader(true);
 
         try {
             const response = await fetch('/api/rankings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slugs, formation })
+                body: JSON.stringify({ slugs: selectedPlayers, formation })
             });
 
             if (!response.ok) {
@@ -230,7 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        players.forEach((p, index) => {
+        // Sort by position order: GK, DEF, MID, FWD
+        const posOrder = { 'Goalkeeper': 0, 'Defender': 1, 'Midfielder': 2, 'Forward': 3 };
+        const sortedPlayers = [...players].sort((a, b) => posOrder[a.position] - posOrder[b.position]);
+
+        sortedPlayers.forEach((p, index) => {
             const card = createPlayerCard(p, index);
             bestXIGrid.appendChild(card);
         });
@@ -279,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${statusLabel}
                 </div>
                 <span class="player-name">${p.name}</span>
+                <span class="player-club-small">${p.club || ''}</span>
             </div>
             <div class="player-stats">
                 <div class="stat-box">

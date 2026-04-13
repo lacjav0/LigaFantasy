@@ -1,0 +1,21 @@
+{
+  "response": {
+    "errors": [
+      {
+        "message": "Field 'displayName' doesn't exist on type 'PlayerConnection'",
+        "extensions": {
+          "code": "UNPROCESSABLE_ENTITY"
+        }
+      }
+    ],
+    "status": 422,
+    "headers": {},
+    "body": "{\"errors\":[{\"message\":\"Field 'displayName' doesn't exist on type 'PlayerConnection'\",\"extensions\":{\"code\":\"UNPROCESSABLE_ENTITY\"}}]}"
+  },
+  "request": {
+    "query": "\n  query Test($slug: String!) {\n    football {\n      club(slug: $slug) {\n        activePlayers {\n          displayName\n          slug\n        }\n      }\n    }\n  }\n",
+    "variables": {
+      "slug": "real-madrid"
+    }
+  }
+}

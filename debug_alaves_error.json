@@ -1,0 +1,18 @@
+{
+  "response": {
+    "errors": [
+      {
+        "message": "Query has complexity of 1804, which exceeds max complexity of 500. Using an APIKEY the limit would be 30000."
+      }
+    ],
+    "status": 200,
+    "headers": {},
+    "body": "{\"errors\":[{\"message\":\"Query has complexity of 1804, which exceeds max complexity of 500. Using an APIKEY the limit would be 30000.\"}]}"
+  },
+  "request": {
+    "query": "\n  query ClubPlayers($slug: String!) {\n    football {\n      club(slug: $slug) {\n        activePlayers {\n          nodes {\n            displayName\n            slug\n            position\n            activeInjuries {\n              id\n            }\n            activeSuspensions {\n              id\n            }\n            so5Scores(last: 15) {\n              score\n            }\n          }\n        }\n      }\n    }\n  }\n",
+    "variables": {
+      "slug": "alaves"
+    }
+  }
+}

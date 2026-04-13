@@ -33,6 +33,7 @@
                     <select id="formation-select" class="form-select">
                         <option value="4-4-2">4-4-2 (Equilibrada)</option>
                         <option value="4-3-3">4-3-3 (Ofensiva)</option>
+                        <option value="3-5-2">3-5-2 (Medio Campo)</option>
                         <option value="4-5-1">4-5-1 (Control)</option>
                         <option value="5-3-2">5-3-2 (Defensiva)</option>
                         <option value="5-4-1">5-4-1 (Muro)</option>
@@ -41,14 +42,17 @@
 
                 <div class="card">
                     <h3><i class="ph ph-users-three"></i> Tus Jugadores</h3>
-                    <p class="hint">Escribe los slugs o añade desde el buscador arriba</p>
-                    <textarea id="slugs-input"
-                        placeholder="jude-bellingham&#10;robert-lewandowski&#10;vinicius-junior"></textarea>
+                    <p class="hint">Añade jugadores desde el buscador de arriba</p>
+                    <div id="selected-players-list" class="selected-players-list">
+                        <p class="empty-msg">No has añadido ningún jugador todavía.</p>
+                    </div>
                     <div class="btn-group">
                         <button id="optimize-btn" class="primary-btn"><i class="ph ph-magic-wand"></i> Optimizar
                             Equipo</button>
                         <button id="save-btn" class="secondary-btn"><i class="ph ph-floppy-disk"></i> Guardar
                             Lista</button>
+                        <button id="global-bargains-btn" class="accent-btn"><i class="ph ph-fire"></i> Top 10 Chollos
+                            Liga</button>
                     </div>
                 </div>
             </section>
@@ -56,6 +60,13 @@
             <section id="results-section" class="results-section hidden">
                 <div class="results-header">
                     <h2><i class="ph ph-chart-bar"></i> Resultados de Optimización</h2>
+                    <div class="sort-controls">
+                        <label for="sort-select">Ordenar por:</label>
+                        <select id="sort-select" class="sort-select">
+                            <option value="potential">Potencial</option>
+                            <option value="value">Valor (Chollos)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="best-xi-container" class="best-xi-section">

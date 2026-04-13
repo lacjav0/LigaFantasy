@@ -32,6 +32,9 @@ const SEARCH_PLAYERS_QUERY = gql`
         anyPlayer {
           slug
           displayName
+          activeClub {
+            name
+          }
           activeInjuries {
             active
           }
@@ -87,7 +90,8 @@ async function searchPlayer(query) {
   const data = await request(SORARE_API_URL, SEARCH_PLAYERS_QUERY, variables);
   return data.searchPlayers.commonPlayerHits.map(hit => ({
     slug: hit.anyPlayer.slug,
-    displayName: hit.anyPlayer.displayName
+    displayName: hit.anyPlayer.displayName,
+    club: hit.anyPlayer.activeClub ? hit.anyPlayer.activeClub.name : 'Sin equipo'
   }));
 }
 

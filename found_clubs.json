@@ -1,0 +1,107 @@
+[
+  {
+    "player": "Vinícius Júnior",
+    "club": {
+      "slug": "real-madrid-madrid",
+      "name": "Real Madrid"
+    }
+  },
+  {
+    "player": "Robert Lewandowski",
+    "club": {
+      "slug": "barcelona-barcelona",
+      "name": "FC Barcelona"
+    }
+  },
+  {
+    "player": "Antoine Griezmann",
+    "club": {
+      "slug": "atletico-madrid-madrid",
+      "name": "Atlético de Madrid"
+    }
+  },
+  {
+    "player": "Take",
+    "club": {
+      "slug": "real-sociedad-donostia-san-sebastian",
+      "name": "Real Sociedad"
+    }
+  },
+  {
+    "player": "Williams",
+    "club": {
+      "slug": "athletic-club-bilbao",
+      "name": "Athletic Club"
+    }
+  },
+  {
+    "player": "Gerard Moreno",
+    "club": {
+      "slug": "villarreal-villarreal",
+      "name": "Villarreal CF"
+    }
+  },
+  {
+    "player": "Oyarzabal",
+    "club": {
+      "slug": "real-sociedad-donostia-san-sebastian",
+      "name": "Real Sociedad"
+    }
+  },
+  {
+    "player": "Aleix García",
+    "club": {
+      "slug": "bayer-leverkusen-leverkusen",
+      "name": "Bayer 04 Leverkusen"
+    }
+  },
+  {
+    "player": "Gayà",
+    "club": {
+      "slug": "valencia-valencia",
+      "name": "Valencia CF"
+    }
+  },
+  {
+    "player": "David García",
+    "club": {
+      "slug": "al-rayyan-al-rayyan",
+      "name": "Al Rayyan SC"
+    }
+  },
+  {
+    "player": "Borja Mayoral",
+    "club": {
+      "slug": "getafe-getafe-madrid",
+      "name": "Getafe CF"
+    }
+  },
+  {
+    "player": "Iago Aspas",
+    "club": {
+      "slug": "celta-de-vigo-vigo",
+      "name": "RC Celta"
+    }
+  },
+  {
+    "player": "Vedat Muriqi",
+    "club": {
+      "slug": "mallorca-palma-de-mallorca",
+      "name": "RCD Mallorca"
+    }
+  },
+  {
+    "player": "Sergi Canós",
+    "club": {
+      "slug": "real-valladolid-valladolid",
+      "name": "Real Valladolid CF"
+    }
+  },
+  {
+    "player": "Alberto Moleiro",
+    "club": {
+      "slug": "villarreal-villarreal",
+      "name": "Villarreal CF"
+    }
+  }
+]

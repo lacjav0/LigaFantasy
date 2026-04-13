@@ -1,0 +1,74 @@
+{
+  "real-madrid-madrid": {
+    "status": "OK",
+    "count": 0
+  },
+  "barcelona-barcelona": {
+    "status": "OK",
+    "count": 0
+  },
+  "atletico-madrid-madrid": {
+    "status": "OK",
+    "count": 0
+  },
+  "real-sociedad-donostia-san-sebastian": {
+    "status": "OK",
+    "count": 0
+  },
+  "athletic-club-bilbao": {
+    "status": "OK",
+    "count": 0
+  },
+  "villarreal-villarreal": {
+    "status": "OK",
+    "count": 0
+  },
+  "valencia-valencia": {
+    "status": "OK",
+    "count": 0
+  },
+  "getafe-getafe-madrid": {
+    "status": "OK",
+    "count": 0
+  },
+  "celta-de-vigo-vigo": {
+    "status": "OK",
+    "count": 0
+  },
+  "mallorca-palma-de-mallorca": {
+    "status": "OK",
+    "count": 0
+  },
+  "las-palmas-las-palmas-de-gran-canaria": {
+    "status": "OK",
+    "count": 0
+  },
+  "girona-girona": {
+    "status": "OK",
+    "count": 0
+  },
+  "sevilla-sevilla-1890": {
+    "status": "OK",
+    "count": 0
+  },
+  "rayo-vallecano-madrid": {
+    "status": "OK",
+    "count": 0
+  },
+  "deportivo-alaves-vitoria-gasteiz": {
+    "status": "OK",
+    "count": 0
+  },
+  "real-betis-sevilla": {
+    "status": "OK",
+    "count": 0
+  },
+  "osasuna-pamplona-irunea": {
+    "status": "OK",
+    "count": 0
+  },
+  "real-valladolid-valladolid": {
+    "status": "OK",
+    "count": 0
+  }
+}

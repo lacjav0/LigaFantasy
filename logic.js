@@ -100,7 +100,7 @@ function getBestXI(rankedPlayers, formation) {
  * @param {string[]} slugs - Array of player slugs.
  * @param {string} [formation] - Optional formation for Best XI calculation.
  */
-async function getRankings(slugs, formation) {
+async function getRankings(slugsWithMeta, formation) {
     const failedSlugs = [];
 
     const getPlayerStatus = (p) => {
@@ -110,8 +110,7 @@ async function getRankings(slugs, formation) {
         return 'Fit';
     };
 
-
-    // Fallback mapping for common players with complex slugs
+    // Fallback mapping for common players
     const commonMapping = {
         'tsygankov': 'viktor-tsygankov',
         'unai simon': 'unai-simon-mendibil',
@@ -121,8 +120,9 @@ async function getRankings(slugs, formation) {
         'vinicius': 'vinicius-jose-paixao-de-oliveira-junior'
     };
 
-    const playersData = await Promise.all(slugs.map(async (input) => {
-        const cleanInput = input.trim().toLowerCase();
+    const playersData = await Promise.all(slugsWithMeta.map(async (playerMeta) => {
+        const input = playerMeta.slug || playerMeta; // Support both object and string for backward compatibility
+        const cleanInput = (typeof input === 'string' ? input : input.slug).trim().toLowerCase();
 
         // 1. Try direct slug match
         let p = await fetchPlayerStats(cleanInput);
@@ -132,35 +132,33 @@ async function getRankings(slugs, formation) {
             p = await fetchPlayerStats(commonMapping[cleanInput]);
         }
 
-        // 3. Fallback to search query
-        if (!p) {
-            const foundSlug = await searchPlayer(input);
-            if (foundSlug) {
-                p = await fetchPlayerStats(foundSlug);
-            }
-        }
+        if (!p) failedSlugs.push(cleanInput);
 
-        if (!p) failedSlugs.push(input);
+        if (p) {
+            // Attach metadata for the next map
+            p.club = playerMeta.club || 'Desconocido';
+            p.customPosition = playerMeta.customPosition;
+        }
         return p;
     }));
 
     const ranked = playersData
         .filter(p => p !== null && p !== undefined)
         .map(p => {
-            const scores = p.so5Scores || [];
-            const l5Raw = scores.slice(0, 5);
-            const avgL5 = l5Raw.length > 0 ? (l5Raw.reduce((s, x) => s + x.score, 0) / l5Raw.length) : 0;
-            const avgL15 = scores.length > 0 ? (scores.reduce((s, x) => s + x.score, 0) / scores.length) : 0;
+            const potentialScore = calculateScore(p);
+            // Override position if provided
+            const finalPosition = p.customPosition || p.position;
 
             return {
                 name: p.displayName,
                 slug: p.slug,
-                position: p.position,
+                club: p.club,
+                position: finalPosition,
                 status: getPlayerStatus(p),
-                score: calculateScore(p),
-                valueScore: calculateValueScore(p, calculateScore(p)),
-                l5: avgL5.toFixed(1),
-                l15: avgL15.toFixed(1)
+                score: potentialScore,
+                valueScore: calculateValueScore(p, potentialScore),
+                l5: p.so5Scores[0] ? p.so5Scores[0].score.toFixed(1) : '0',
+                l15: p.so5Scores[0] ? p.so5Scores[0].score.toFixed(1) : '0'
             };
         })
         .sort((a, b) => b.score - a.score);

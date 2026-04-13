@@ -1,0 +1,21 @@
+{
+  "response": {
+    "errors": [
+      {
+        "message": "Team(slug=alaves) not found",
+        "extensions": {
+          "code": "NOT_FOUND"
+        }
+      }
+    ],
+    "status": 200,
+    "headers": {},
+    "body": "{\"errors\":[{\"message\":\"Team(slug=alaves) not found\",\"extensions\":{\"code\":\"NOT_FOUND\"}}]}"
+  },
+  "request": {
+    "query": "\n  query DebugClub($slug: String!) {\n    football {\n      club(slug: $slug) {\n        __typename\n        activePlayers {\n          __typename\n          nodes {\n            __typename\n            ... on Player {\n               displayName\n               slug\n            }\n          }\n        }\n      }\n    }\n  }\n",
+    "variables": {
+      "slug": "alaves"
+    }
+  }
+}

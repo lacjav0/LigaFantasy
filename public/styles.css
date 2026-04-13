@@ -154,6 +154,16 @@ button.secondary-btn:hover {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
+button.accent-btn {
+    flex: 1;
+    background: var(--accent);
+    color: #000;
+}
+
+button.accent-btn:hover {
+    box-shadow: 0 10px 20px -5px rgba(193, 255, 0, 0.4);
+}
+
 button:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px -5px var(--primary-glow);
@@ -166,6 +176,27 @@ button:hover {
     align-items: center;
     margin-bottom: 1.5rem;
 }
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-select {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.stat-value.value {
+    color: #10b981;
+}
+
 
 .rankings-grid {
     display: grid;
@@ -397,4 +428,139 @@ button:hover {
 .search-item:hover .add-btn {
     background: var(--primary);
     color: #000;
+}
+
+/* Player Status Badges - V2.0 */
+.player-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.player-status-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.status-injured .player-status-badge {
+    background: #FF4B2B;
+    color: white;
+}
+
+.status-suspended .player-status-badge {
+    background: #FF8C00;
+    color: white;
+}
+
+.status-doubtful .player-status-badge {
+    background: #FFD700;
+    color: black;
+}
+
+.player-card.status-injured {
+    border-left: 4px solid #FF4B2B;
+}
+
+.player-card.status-suspended {
+    border-left: 4px solid #FF8C00;
+}
+
+.player-card.status-doubtful {
+    border-left: 4px solid #FFD700;
+}
+
+/* V3.0 Enhancements */
+.selected-players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+    padding-right: 0.5rem;
+}
+
+.selected-player-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: var(--transition);
+}
+
+.selected-player-item:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.selected-player-item .name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.selected-player-item .club {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.player-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.pos-override {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.remove-btn {
+    background: transparent;
+    color: var(--text-dim);
+    width: auto;
+    padding: 4px;
+    font-size: 1.1rem;
+}
+
+.remove-btn:hover {
+    color: var(--danger);
+    transform: scale(1.1);
+    box-shadow: none;
+    background: transparent;
+}
+
+.player-club-small {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.search-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-item-info .name {
+    font-weight: 600;
+}
+
+.search-item-info .club {
+    font-size: 0.75rem;
+    color: var(--text-dim);
 }

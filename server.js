@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { getRankings } = require('./logic');
+const { getRankings, getGlobalBargains } = require('./logic');
 const fs = require('fs');
 const path = require('path');
 
@@ -48,7 +48,14 @@ app.get('/api/load', (req, res) => {
     try {
         if (fs.existsSync(SAVED_LIST_PATH)) {
             const data = fs.readFileSync(SAVED_LIST_PATH, 'utf8');
-            return res.json(JSON.parse(data));
+            let parsed = JSON.parse(data);
+
+            // Migration: if saved as string array, convert to object array
+            if (Array.isArray(parsed.slugs) && typeof parsed.slugs[0] === 'string') {
+                parsed.slugs = parsed.slugs.map(s => ({ slug: s, displayName: s }));
+            }
+
+            return res.json(parsed);
         }
         res.json({ slugs: [] });
     } catch (error) {
@@ -68,6 +75,17 @@ app.post('/api/save', (req, res) => {
     } catch (error) {
         console.error('Save Error:', error);
         res.status(500).json({ error: 'Failed to save list' });
+    }
+});
+
+app.get('/api/bargains/global', async (req, res) => {
+    try {
+        console.log('GLOBAL BARGAINS REQUEST');
+        const bargains = await getGlobalBargains();
+        res.json(bargains);
+    } catch (error) {
+        console.error('Bargains API Error:', error);
+        res.status(500).json({ error: 'Failed to fetch global bargains' });
     }
 });
 

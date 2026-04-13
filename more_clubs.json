@@ -1,0 +1,58 @@
+[
+  {
+    "player": "Youssef En-Nesyri",
+    "club": {
+      "slug": "al-ittihad-jeddah",
+      "name": "Al Ittihad FC (Jeddah)"
+    }
+  },
+  {
+    "player": "David García",
+    "club": {
+      "slug": "al-rayyan-al-rayyan",
+      "name": "Al Rayyan SC"
+    }
+  },
+  {
+    "player": "Íñigo Martínez",
+    "club": {
+      "slug": "al-nassr-ar-riyad-riyadh",
+      "name": "Al Nassr FC"
+    }
+  },
+  {
+    "player": "Morales",
+    "club": {
+      "slug": "levante-valencia",
+      "name": "Levante UD"
+    }
+  },
+  {
+    "player": "Merino",
+    "club": {
+      "slug": "arsenal-london",
+      "name": "Arsenal FC"
+    }
+  },
+  {
+    "player": "Jonathan Viera",
+    "club": {
+      "slug": "las-palmas-las-palmas-de-gran-canaria",
+      "name": "UD Las Palmas"
+    }
+  },
+  {
+    "player": "Luis Suárez",
+    "club": {
+      "slug": "sporting-cp-lisboa",
+      "name": "Sporting Clube de Portugal"
+    }
+  },
+  {
+    "player": "Gerard Moreno",
+    "club": {
+      "slug": "villarreal-villarreal",
+      "name": "Villarreal CF"
+    }
+  }
+]
