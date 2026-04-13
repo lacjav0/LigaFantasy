@@ -75,11 +75,12 @@ function getBestXI(rankedPlayers, formation) {
     };
 
     const bestXI = [];
+    const fitPlayers = rankedPlayers.filter(p => !p.status || p.status === 'Fit');
     const playersByPos = {
-        'Goalkeeper': rankedPlayers.filter(p => p.position === 'Goalkeeper'),
-        'Defender': rankedPlayers.filter(p => p.position === 'Defender'),
-        'Midfielder': rankedPlayers.filter(p => p.position === 'Midfielder'),
-        'Forward': rankedPlayers.filter(p => p.position === 'Forward')
+        'Goalkeeper': fitPlayers.filter(p => p.position === 'Goalkeeper'),
+        'Defender': fitPlayers.filter(p => p.position === 'Defender'),
+        'Midfielder': fitPlayers.filter(p => p.position === 'Midfielder'),
+        'Forward': fitPlayers.filter(p => p.position === 'Forward')
     };
 
     // Pick players for each position based on requirements
