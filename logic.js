@@ -164,13 +164,43 @@ async function getRankings(slugsWithMeta, formation) {
         .sort((a, b) => b.score - a.score);
 
     let bestXI = [];
-    if (formation) {
+    let detectedFormation = formation;
+
+    if (formation === 'auto') {
+        const ALL_FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '5-3-2', '5-4-1'];
+        let maxScore = -1;
+
+        for (const form of ALL_FORMATIONS) {
+            const tempXI = getBestXI(ranked, form);
+            // Solo considerar formaciones que se pueden completas (11 jugadores)
+            if (tempXI.length === 11) {
+                const currentScore = tempXI.reduce((sum, p) => sum + p.score, 0);
+                if (currentScore > maxScore) {
+                    maxScore = currentScore;
+                    bestXI = tempXI;
+                    detectedFormation = form;
+                }
+            }
+        }
+
+        // Fallback por si ninguna formación tiene 11 jugadores
+        if (bestXI.length === 0) {
+            for (const form of ALL_FORMATIONS) {
+                const tempXI = getBestXI(ranked, form);
+                if (tempXI.length > bestXI.length) {
+                    bestXI = tempXI;
+                    detectedFormation = form;
+                }
+            }
+        }
+        console.log(`Auto-detected best formation: ${detectedFormation} with score: ${maxScore}`);
+    } else if (formation) {
         console.log(`Calculating Best XI for formation: ${formation}`);
         bestXI = getBestXI(ranked, formation);
         console.log(`Best XI calculated: ${bestXI.length} players`);
     }
 
-    return { ranked, bestXI, failedSlugs };
+    return { ranked, bestXI, failedSlugs, detectedFormation };
 }
 
 

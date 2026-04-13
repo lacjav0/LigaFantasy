@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ensure Best XI container is visible for regular optimization
             document.getElementById('best-xi-container').classList.remove('hidden');
 
-            renderBestXI(data.bestXI);
+            renderBestXI(data.bestXI, data.detectedFormation);
             applySortingAndRender();
             resultsSection.classList.remove('hidden');
         } catch (error) {
@@ -262,9 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function renderBestXI(players) {
+    function renderBestXI(players, formation) {
         const bestXIGrid = document.getElementById('best-xi-grid');
+        const titleElement = document.querySelector('#best-xi-container h3');
         bestXIGrid.innerHTML = '';
+
+        if (formation && formation !== 'auto') {
+            titleElement.innerHTML = `<i class="ph ph-soccer-ball"></i> Tu Mejor XI Recomendado (${formation})`;
+        } else {
+            titleElement.innerHTML = `<i class="ph ph-soccer-ball"></i> Tu Mejor XI Recomendado`;
+        }
 
         if (!players || players.length === 0) {
             bestXIGrid.innerHTML = '<p class="empty-msg">No hay suficientes jugadores para esta formación.</p>';
