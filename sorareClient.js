@@ -73,21 +73,35 @@ const CLUB_PLAYERS_QUERY = gql`
   }
 `;
 
-async function fetchPlayerStats(playerSlug) {
+const commonHeaders = {
+  'Connection': 'close',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+};
+
+async function fetchPlayerStats(playerSlug, retries = 2) {
   const variables = { slug: playerSlug };
-  const data = await request(SORARE_API_URL, PLAYER_STATS_QUERY, variables);
-  return data.football.player;
+  try {
+    const data = await request(SORARE_API_URL, PLAYER_STATS_QUERY, variables, commonHeaders);
+    return data.football.player;
+  } catch (error) {
+    if (retries > 0 && error.message && error.message.includes('fetch failed')) {
+      console.warn(`Transient fetch failed for ${playerSlug}, retrying... (${retries} retries left)`);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return fetchPlayerStats(playerSlug, retries - 1);
+    }
+    throw error;
+  }
 }
 
 async function fetchClubPlayers(clubSlug) {
   const variables = { slug: clubSlug };
-  const data = await request(SORARE_API_URL, CLUB_PLAYERS_QUERY, variables);
+  const data = await request(SORARE_API_URL, CLUB_PLAYERS_QUERY, variables, commonHeaders);
   return data.football.club && data.football.club.activePlayers ? data.football.club.activePlayers.nodes : [];
 }
 
 async function searchPlayer(query) {
   const variables = { query };
-  const data = await request(SORARE_API_URL, SEARCH_PLAYERS_QUERY, variables);
+  const data = await request(SORARE_API_URL, SEARCH_PLAYERS_QUERY, variables, commonHeaders);
   return data.searchPlayers.commonPlayerHits.map(hit => ({
     slug: hit.anyPlayer.slug,
     displayName: hit.anyPlayer.displayName,

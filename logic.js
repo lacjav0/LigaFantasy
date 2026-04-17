@@ -121,27 +121,41 @@ async function getRankings(slugsWithMeta, formation) {
         'vinicius': 'vinicius-jose-paixao-de-oliveira-junior'
     };
 
-    const playersData = await Promise.all(slugsWithMeta.map(async (playerMeta) => {
+    const playersData = [];
+    
+    // Process strictly sequentially (chunkSize = 1) to avoid ECONNRESET and rate limits from Sorare GraphQL
+    for (let i = 0; i < slugsWithMeta.length; i++) {
+        const playerMeta = slugsWithMeta[i];
         const input = playerMeta.slug || playerMeta; // Support both object and string for backward compatibility
         const cleanInput = (typeof input === 'string' ? input : input.slug).trim().toLowerCase();
 
-        // 1. Try direct slug match
-        let p = await fetchPlayerStats(cleanInput);
+        let p = null;
+        try {
+            // 1. Try direct slug match
+            p = await fetchPlayerStats(cleanInput);
 
-        // 2. Try common mapping
-        if (!p && commonMapping[cleanInput]) {
-            p = await fetchPlayerStats(commonMapping[cleanInput]);
+            // 2. Try common mapping
+            if (!p && commonMapping[cleanInput]) {
+                p = await fetchPlayerStats(commonMapping[cleanInput]);
+            }
+        } catch (error) {
+            console.error(`Error fetching data for ${cleanInput}: ${error.message}`);
         }
 
-        if (!p) failedSlugs.push(cleanInput);
-
-        if (p) {
+        if (!p) {
+            failedSlugs.push(cleanInput);
+        } else {
             // Attach metadata for the next map
             p.club = playerMeta.club || 'Desconocido';
             p.customPosition = playerMeta.customPosition;
+            playersData.push(p);
         }
-        return p;
-    }));
+        
+        // Very short delay between requests
+        if (i < slugsWithMeta.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+    }
 
     const ranked = playersData
         .filter(p => p !== null && p !== undefined)

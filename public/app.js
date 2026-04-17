@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedPlayers = [];
 
     // Auto-load saved list on startup
+    if (window.location.protocol === 'file:') {
+        alert("⚠️ ATENCIÓN: Estás abriendo el archivo index.html directamente (file://). Debes abrir tu navegador e ir a http://localhost:3000 para que funcione la conexión con el servidor NodeJS.");
+    }
+
     async function loadSavedList() {
         try {
             const response = await fetch('/api/load');
