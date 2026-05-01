@@ -10,7 +10,41 @@ const LA_LIGA_CLUBS = [
     'real-betis-sevilla', 'osasuna-pamplona-irunea', 'real-valladolid-valladolid'
 ];
 
+/**
+ * Calculates a form factor based on the team's last 5 games.
+ * @param {Object} activeClub - The club object containing games.
+ * @returns {number} - Multiplier between 0.9 and 1.1
+ */
+function calculateTeamFormFactor(activeClub) {
+    if (!activeClub || !activeClub.games || !activeClub.games.nodes || activeClub.games.nodes.length === 0) {
+        return 1.0;
+    }
 
+    let points = 0;
+    let validGames = 0;
+
+    for (const game of activeClub.games.nodes) {
+        if (game.homeGoals !== null && game.awayGoals !== null && game.homeTeam && game.awayTeam) {
+            const isHome = game.homeTeam.name === activeClub.name;
+            const clubGoals = isHome ? game.homeGoals : game.awayGoals;
+            const oppGoals = isHome ? game.awayGoals : game.homeGoals;
+            
+            if (clubGoals > oppGoals) {
+                points += 3;
+            } else if (clubGoals === oppGoals) {
+                points += 1;
+            }
+            validGames += 1;
+        }
+    }
+
+    if (validGames === 0) return 1.0;
+
+    const maxPoints = validGames * 3;
+    // Scale from 0.9 to 1.1 based on points / maxPoints
+    const formFactor = 0.9 + (points / maxPoints) * 0.2;
+    return formFactor;
+}
 /**
  * Calculates a 'Fantasy Potential Score' for a player.
  * @param {Object} player - The player data from Sorare.
@@ -27,7 +61,11 @@ function calculateScore(player) {
     const avgL15 = l15.length > 0 ? l15.reduce((sum, s) => sum + s.score, 0) / l15.length : 0;
 
     // Weighting: 60% Form (L5), 40% Stability (L15)
-    const score = (avgL5 * 0.6) + (avgL15 * 0.4);
+    let score = (avgL5 * 0.6) + (avgL15 * 0.4);
+
+    // Apply Team Form Factor
+    const teamFormFactor = calculateTeamFormFactor(player.activeClub);
+    score = score * teamFormFactor;
 
     return parseFloat(score.toFixed(2));
 }
@@ -271,4 +309,4 @@ async function getGlobalBargains() {
     return ranked;
 }
 
-module.exports = { calculateScore, getRankings, getBestXI, getGlobalBargains };
+module.exports = { calculateScore, calculateTeamFormFactor, getRankings, getBestXI, getGlobalBargains };

@@ -4,7 +4,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const SORARE_API_URL = 'https://api.sorare.com/graphql';
 
 const PLAYER_STATS_QUERY = gql`
-  query PlayerStats($slug: String!) {
+  query PlayerStats($slug: String!, $startDate: ISO8601DateTime!, $endDate: ISO8601DateTime!) {
     football {
       player(slug: $slug) {
         displayName
@@ -19,6 +19,17 @@ const PLAYER_STATS_QUERY = gql`
         }
         so5Scores(last: 15) {
           score
+        }
+        activeClub {
+          name
+          games(startDate: $startDate, endDate: $endDate, last: 5) {
+            nodes {
+              homeTeam { name }
+              awayTeam { name }
+              homeGoals
+              awayGoals
+            }
+          }
         }
       }
     }
@@ -49,9 +60,18 @@ const SEARCH_PLAYERS_QUERY = gql`
 
 // Optimized for complexity limits (1000 max)
 const CLUB_PLAYERS_QUERY = gql`
-  query ClubPlayers($slug: String!) {
+  query ClubPlayers($slug: String!, $startDate: ISO8601DateTime!, $endDate: ISO8601DateTime!) {
     football {
       club(slug: $slug) {
+        name
+        games(startDate: $startDate, endDate: $endDate, last: 5) {
+          nodes {
+            homeTeam { name }
+            awayTeam { name }
+            homeGoals
+            awayGoals
+          }
+        }
         activePlayers(first: 25) {
           nodes {
             displayName
@@ -79,7 +99,9 @@ const commonHeaders = {
 };
 
 async function fetchPlayerStats(playerSlug, retries = 2) {
-  const variables = { slug: playerSlug };
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  const variables = { slug: playerSlug, startDate, endDate };
   try {
     const data = await request(SORARE_API_URL, PLAYER_STATS_QUERY, variables, commonHeaders);
     return data.football.player;
@@ -94,9 +116,22 @@ async function fetchPlayerStats(playerSlug, retries = 2) {
 }
 
 async function fetchClubPlayers(clubSlug) {
-  const variables = { slug: clubSlug };
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  const variables = { slug: clubSlug, startDate, endDate };
   const data = await request(SORARE_API_URL, CLUB_PLAYERS_QUERY, variables, commonHeaders);
-  return data.football.club && data.football.club.activePlayers ? data.football.club.activePlayers.nodes : [];
+  
+  const club = data.football.club;
+  if (!club || !club.activePlayers) return [];
+  
+  const players = club.activePlayers.nodes;
+  players.forEach(p => {
+    p.activeClub = {
+      name: club.name,
+      games: club.games
+    };
+  });
+  return players;
 }
 
 async function searchPlayer(query) {
