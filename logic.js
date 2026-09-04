@@ -1,4 +1,4 @@
-const { fetchPlayerStats, searchPlayer, fetchClubPlayers } = require('./sorareClient');
+const { fetchPlayerStats, fetchClubGames, searchPlayer, fetchClubPlayers } = require('./sorareClient');
 
 const LA_LIGA_CLUBS = [
     'real-madrid-madrid', 'barcelona-barcelona', 'atletico-madrid-madrid',
@@ -12,20 +12,20 @@ const LA_LIGA_CLUBS = [
 
 /**
  * Calculates a form factor based on the team's last 5 games.
- * @param {Object} activeClub - The club object containing games.
+ * @param {Object} clubData - The club object containing games.
  * @returns {number} - Multiplier between 0.9 and 1.1
  */
-function calculateTeamFormFactor(activeClub) {
-    if (!activeClub || !activeClub.games || !activeClub.games.nodes || activeClub.games.nodes.length === 0) {
+function calculateTeamFormFactor(clubData) {
+    if (!clubData || !clubData.games || !clubData.games.nodes || clubData.games.nodes.length === 0) {
         return 1.0;
     }
 
     let points = 0;
     let validGames = 0;
 
-    for (const game of activeClub.games.nodes) {
+    for (const game of clubData.games.nodes) {
         if (game.homeGoals !== null && game.awayGoals !== null && game.homeTeam && game.awayTeam) {
-            const isHome = game.homeTeam.name === activeClub.name;
+            const isHome = game.homeTeam.name === clubData.name;
             const clubGoals = isHome ? game.homeGoals : game.awayGoals;
             const oppGoals = isHome ? game.awayGoals : game.homeGoals;
             
@@ -45,26 +45,25 @@ function calculateTeamFormFactor(activeClub) {
     const formFactor = 0.9 + (points / maxPoints) * 0.2;
     return formFactor;
 }
+
 /**
  * Calculates a 'Fantasy Potential Score' for a player.
+ * Now uses l5/l15 averageScore values from the new Sorare API.
  * @param {Object} player - The player data from Sorare.
+ * @param {number} teamFormFactor - The team form factor multiplier.
  * @returns {number} - The calculated score.
  */
-function calculateScore(player) {
-    if (!player || !player.so5Scores) return 0;
+function calculateScore(player, teamFormFactor = 1.0) {
+    if (!player) return 0;
 
-    const stats = player.so5Scores;
-    const l5 = stats.slice(0, 5);
-    const l15 = stats.slice(0, 10);
-
-    const avgL5 = l5.length > 0 ? l5.reduce((sum, s) => sum + s.score, 0) / l5.length : 0;
-    const avgL15 = l15.length > 0 ? l15.reduce((sum, s) => sum + s.score, 0) / l15.length : 0;
+    // Use direct l5/l15 averageScore values from the new API
+    const avgL5 = player.l5 || 0;
+    const avgL15 = player.l15 || 0;
 
     // Weighting: 60% Form (L5), 40% Stability (L15)
     let score = (avgL5 * 0.6) + (avgL15 * 0.4);
 
     // Apply Team Form Factor
-    const teamFormFactor = calculateTeamFormFactor(player.activeClub);
     score = score * teamFormFactor;
 
     return parseFloat(score.toFixed(2));
@@ -78,12 +77,9 @@ function calculateScore(player) {
  * @returns {number}
  */
 function calculateValueScore(player, potentialScore) {
-    if (!player || !player.so5Scores) return 0;
+    if (!player) return 0;
 
-    // Heuristic: Value is higher if the player has a high L15 average relative to L5 (Stability)
-    // and if they are currently "Fit".
-    const l15 = player.so5Scores;
-    const avgL15 = l15.length > 0 ? (l15.reduce((s, x) => s + x.score, 0) / l15.length) : 0;
+    const avgL15 = player.l15 || 0;
 
     const isFit = !(player.activeSuspensions && player.activeSuspensions.length > 0) &&
         !(player.activeInjuries && player.activeInjuries.length > 0);
@@ -136,7 +132,7 @@ function getBestXI(rankedPlayers, formation) {
 
 /**
  * Analyzes and ranks a list of players.
- * @param {string[]} slugs - Array of player slugs.
+ * @param {Object[]} slugsWithMeta - Array of player objects with slug, club, customPosition.
  * @param {string} [formation] - Optional formation for Best XI calculation.
  */
 async function getRankings(slugsWithMeta, formation) {
@@ -161,7 +157,7 @@ async function getRankings(slugsWithMeta, formation) {
 
     const playersData = [];
     
-    // Process strictly sequentially (chunkSize = 1) to avoid ECONNRESET and rate limits from Sorare GraphQL
+    // Process strictly sequentially to avoid ECONNRESET and rate limits from Sorare GraphQL
     for (let i = 0; i < slugsWithMeta.length; i++) {
         const playerMeta = slugsWithMeta[i];
         const input = playerMeta.slug || playerMeta; // Support both object and string for backward compatibility
@@ -183,8 +179,8 @@ async function getRankings(slugsWithMeta, formation) {
         if (!p) {
             failedSlugs.push(cleanInput);
         } else {
-            // Attach metadata for the next map
-            p.club = playerMeta.club || 'Desconocido';
+            // Attach metadata
+            p.club = playerMeta.club || (p.activeClub ? p.activeClub.name : 'Desconocido');
             p.customPosition = playerMeta.customPosition;
             playersData.push(p);
         }
@@ -195,10 +191,34 @@ async function getRankings(slugsWithMeta, formation) {
         }
     }
 
+    // Fetch club games for team form factor (deduplicate by club slug)
+    const clubSlugsSet = new Set();
+    playersData.forEach(p => {
+        if (p.activeClub && p.activeClub.slug) {
+            clubSlugsSet.add(p.activeClub.slug);
+        }
+    });
+
+    const clubFormFactors = {};
+    for (const clubSlug of clubSlugsSet) {
+        try {
+            const clubData = await fetchClubGames(clubSlug);
+            if (clubData) {
+                clubFormFactors[clubSlug] = calculateTeamFormFactor(clubData);
+                console.log(`[FORM] ${clubData.name}: factor=${clubFormFactors[clubSlug].toFixed(2)}`);
+            }
+        } catch (error) {
+            console.error(`Error fetching club games for ${clubSlug}: ${error.message}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
     const ranked = playersData
         .filter(p => p !== null && p !== undefined)
         .map(p => {
-            const potentialScore = calculateScore(p);
+            const clubSlug = p.activeClub ? p.activeClub.slug : null;
+            const teamFormFactor = clubSlug ? (clubFormFactors[clubSlug] || 1.0) : 1.0;
+            const potentialScore = calculateScore(p, teamFormFactor);
             // Override position if provided
             const finalPosition = p.customPosition || p.position;
 
@@ -210,8 +230,8 @@ async function getRankings(slugsWithMeta, formation) {
                 status: getPlayerStatus(p),
                 score: potentialScore,
                 valueScore: calculateValueScore(p, potentialScore),
-                l5: p.so5Scores[0] ? p.so5Scores[0].score.toFixed(1) : '0',
-                l15: p.so5Scores[0] ? p.so5Scores[0].score.toFixed(1) : '0'
+                l5: p.l5 ? p.l5.toFixed(1) : '0',
+                l15: p.l15 ? p.l15.toFixed(1) : '0'
             };
         })
         .sort((a, b) => b.score - a.score);
@@ -220,27 +240,23 @@ async function getRankings(slugsWithMeta, formation) {
     let detectedFormation = formation;
 
     if (formation === 'auto') {
-        const ALL_FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '5-3-2', '5-4-1'];
+        const ALL_FORMATIONS = ['3-4-3', '3-5-2', '4-3-3', '4-4-2', '4-5-1', '5-3-2'];
+
         let maxScore = -1;
+        let maxLength = -1;
 
         for (const form of ALL_FORMATIONS) {
             const tempXI = getBestXI(ranked, form);
-            // Solo considerar formaciones que se pueden completas (11 jugadores)
-            if (tempXI.length === 11) {
-                const currentScore = tempXI.reduce((sum, p) => sum + p.score, 0);
+            const currentScore = tempXI.reduce((sum, p) => sum + p.score, 0);
+
+            if (tempXI.length > maxLength) {
+                maxLength = tempXI.length;
+                maxScore = currentScore;
+                bestXI = tempXI;
+                detectedFormation = form;
+            } else if (tempXI.length === maxLength) {
                 if (currentScore > maxScore) {
                     maxScore = currentScore;
-                    bestXI = tempXI;
-                    detectedFormation = form;
-                }
-            }
-        }
-
-        // Fallback por si ninguna formación tiene 11 jugadores
-        if (bestXI.length === 0) {
-            for (const form of ALL_FORMATIONS) {
-                const tempXI = getBestXI(ranked, form);
-                if (tempXI.length > bestXI.length) {
                     bestXI = tempXI;
                     detectedFormation = form;
                 }
@@ -291,7 +307,8 @@ async function getGlobalBargains() {
     };
 
     const ranked = allPlayersData.map(p => {
-        const potentialScore = calculateScore(p);
+        const teamFormFactor = calculateTeamFormFactor(p.activeClub);
+        const potentialScore = calculateScore(p, teamFormFactor);
         return {
             name: p.displayName,
             slug: p.slug,
